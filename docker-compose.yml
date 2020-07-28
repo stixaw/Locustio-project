@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  master:
+    image: locustio/locust:1.1.1
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./:/mnt/locust
+    environment:
+      - DOCKER_ENV=dev
+    command: -f /mnt/locust/workschedule/Bulk_CreateShift.py --master #--headless -u 5 -r 1 -t 1m --expect-worker 1
+
+  worker:
+    image: locustio/locust:1.1.1
+    volumes:
+      - ./:/mnt/locust
+    environment:
+      - DOCKER_ENV=dev
+    command: -f /mnt/locust/workschedule/Bulk_CreateShift.py --worker --master-host master
