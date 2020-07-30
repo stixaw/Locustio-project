@@ -1,7 +1,7 @@
 from os import environ
 from locust import HttpUser, TaskSet, task, between, SequentialTaskSet, User
 import uuid
-import env
+import testdata
 import json
 import datetime
 
@@ -44,12 +44,12 @@ class UserBehavior(SequentialTaskSet):
     @task
     # put this onto the user instance for the taskset. (talk to Mark)
     def get_assignmentId(self):
-      self.assignment_id = env.get_assignment_id()
+      self.assignment_id = testdata.get_assignment_id()
       return self.assignment_id
 
     @task
     def create_worksite(self):
-        default_worksites = env.get_default_worksites()
+        default_worksites = testdata.get_default_worksites()
         url = "/assignments/%s/worksites/batchUpdateLabels" % self.assignment_id
 
         response = self.client.post(url, headers={
@@ -60,7 +60,7 @@ class UserBehavior(SequentialTaskSet):
         body = json.loads(response.text)
         if len(body['assignmentWorksites']) > 0:
             self.worksite_id = body['assignmentWorksites'][0]['worksiteId']
-            assert response.elapsed < datetime.timedelta(seconds = 3), "createWorksite request took more than 3 second"
+        assert response.elapsed < datetime.timedelta(seconds = 3), "createWorksite request took more than 3 second"
         return self.worksite_id  
 
     @task
