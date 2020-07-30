@@ -2,38 +2,6 @@
 
 Locustio is a tool for running api load testing
 
-## Prerequisites
-
-for Python 3:
-```bash
-$ python3 -m pip install locustio
-```
-
-MacOS:
-
-Install Homebrew
-Inastll libev
-
-```bash
-brew install libev
-```
-for Python 3:
-```bash
-$ python3 -m pip install locustio
-```
-
-Windows:
-install python 3
-
-install pip3
-
-install Locustio:
-
-for Python 3:
-```bash
-$ python3 -m pip3 install locustio
-```
-
 ## Usage
 
 if you are working in the locustio directory make sure you can see the .py files for tests:
@@ -57,15 +25,16 @@ Running Locust distributed without the web UI, you should specify the --expect-s
 
 Running with Docker Image:
 
-First ensure your docker.yml file has the correct environment for testing:
+First
+ensure your docker-compose.yml file has the correct environment for testing:
 DOCKER_ENV=feature or dev, stage
 and determine what test you want to run in this session:
 command: -f /mnt/locust/workschedule/Create_Shift.py --master
 
-
-Second, if you are doing feature branch in the env.py you need to set the feature branch:
-    if environment == "feature":
-        target = "https://pde-3593-use-sequeliz--chg-work-schedule-service.feature.platform.aws.chgit.com" 
+Second
+if you are doing feature branch in the env.py you need to set the feature branch:
+  if environment == "feature":
+    target = "https://pde-3593-use-sequeliz--chg-work-schedule-service.feature.platform.aws.chgit.com" 
 
 Starting docker session with ui and 1 worker:
 ```
@@ -73,7 +42,7 @@ docker-compose up --scale worker=1
 ```
 
 go to http://localhost:8089/ to start the scenario:
-Standard load is 20 users 10 hatch rate
+Standard load is 10 users 5 hatch rate (this is a standard load for an endpoint)
 
 Running with Docker:
 

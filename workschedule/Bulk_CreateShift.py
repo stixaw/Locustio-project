@@ -4,13 +4,18 @@ import uuid
 import env
 import json
 from random import randint
+import datetime
 
 def get_environment():
-    if environ.get("DOCKER_ENV"):
-        return environ.get("DOCKER_ENV")
-    else:
-        print("no env")
-        return "dev"
+    if environ.get("TEST_CLIENT_ID"):
+        client_id = environ.get("TEST_CLIENT_ID")
+        client_secret = environ.get("TEST_CLIENT_SECRET")
+        return client_id, client_secret
+
+def get_host():
+  if environ.get("TEST_API_URL"):
+    host = environ.get("TEST_API_URL")
+    return host
 
 
 class BulkCreateSequence(SequentialTaskSet):
@@ -19,12 +24,9 @@ class BulkCreateSequence(SequentialTaskSet):
         self.get_token()
 
     def get_token(self):
-        run_env = get_environment()
-        print("ENV: {0}".format(run_env))
-
-        results = env.get_tokensecrets(run_env)
-        client_id = results[1]
-        client_secret = results[2]
+        get_env = get_environment()
+        client_id = get_env[0]
+        client_secret = get_env[1]
 
         response = self.client.post("/auth/token", json={
             "client_id": client_id,
@@ -59,36 +61,15 @@ class BulkCreateSequence(SequentialTaskSet):
             "Content-Type": "application/json"
         }, json=default_worksites
         )
-
-        body = json.loads(response.text)
-        message = "!!AssignmentId= {1}: @@Worksites= {0}".format(
-            body['assignmentWorksites'], self.assignment_id)
-
-        print("Create worksites response: {0}".format(message))
-
-    @task
-    def get_worksites(self):
-        url = "/assignments/%s/worksites" % self.assignment_id
-
-        print("Get Worksites")
-        response = self.client.get(url, headers={
-            "Authorization": self.jwt,
-            "Content-Type": "application/json"
-        })
         body = json.loads(response.text)
         if len(body['assignmentWorksites']) > 0:
             self.worksite_id = body['assignmentWorksites'][0]['worksiteId']
-
-        message = "AssignmentId = {1} Worksite Id = {0}".format(
-            body['assignmentWorksites'][0]['worksiteId'], self.assignment_id)
-
-        print(message)
-        return self.worksite_id
+        assert response.elapsed < datetime.timedelta(seconds = 3), "createWorksite request took more than 3 second"
+        return self.worksite_id  
 
     @task
     def bulk_create_shift(self):
         self.delete_shifts = []
-
         start_date = "2020-08-02"
         url = "/assignments/%s/shifts/bulk" % self.assignment_id
 
@@ -112,34 +93,44 @@ class BulkCreateSequence(SequentialTaskSet):
               "shifts": shifts_array
         })
         body = json.loads(response.text)
-        message = "Shifts count = {0}".format(len(body['shifts']))
-        print(message)
 
         shifts = body['shifts']
         for s in shifts:
             self.delete_shifts.append(s['id'])
-        print("Shifts count in delete shifts array = {0}".format(len(self.delete_shifts)))
+        assert response.elapsed < datetime.timedelta(seconds = 3), "Bulk Create Shifts for {0} shifts request took more than 3 second".format(random_shift_num)
 
     @task
     def get_shifts(self):
+
         url = "/assignments/%s/shifts" % self.assignment_id
 
-        print("Get Shifts")
+        print("Get Shift")
         response = self.client.get(url, headers={
             "Authorization": self.jwt,
             "Content-Type": "application/json"
         })
+        assert response.elapsed < datetime.timedelta(seconds = 3), "Get Shifts request took more than 3 second"
 
+    @task
+    def query_endpoint(self):
+        url = "/shifts/query?count=100&page=1&includeDeleted=true"
+
+        print("Query select all shifts by assignmentId")
+        response = self.client.post(url, headers={
+              "Authorization": self.jwt,
+              "Content-Type": "application/json"
+          }, json={
+              "where": {
+                  "assignmentId": self.assignment_id
+              }
+          })
         body = json.loads(response.text)
-        message = "Get Shifts count = {0}".format(len(body['shifts']))
-
-        print(message)
+        print("query results {0}".format(body))
+        assert response.elapsed < datetime.timedelta(seconds = 3), "Query get shifts by assignmentId request took more than 3 second"
 
 
 class WebsiteUser(HttpUser):
-    run_env = get_environment()
-    response = env.get_tokensecrets(run_env)
-    host = response[0]
+    host = get_host()
 
     tasks = [BulkCreateSequence]
     wait_time = between(1, 1)

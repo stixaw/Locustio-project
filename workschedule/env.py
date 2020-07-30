@@ -51,18 +51,3 @@ def get_default_worksites():
     }
     return default_worksites
 
-
-def get_tokensecrets(environment):
-    if environment == "stage":
-        target = "https://chg-work-schedule-service.stage.platform.aws.chgit.com"
-        client_id = "0oakhzbfzlysh9qMK0h7"
-        client_secret = "GGUVwu0UM6B97N4hqg9arCLJcfUeRngZKsp92E6R"
-    if environment == "dev":
-        target = "https://chg-work-schedule-service.dev.platform.aws.chgit.com"
-        client_id = "0oaj3gnpvn9JzAup20h7"
-        client_secret = "0Qg4TeNUD12e7z08bbUVvfINWENLXdJrn2bUlHwf"
-    if environment == "feature":
-        target = "https://pde-3109-update-shift--chg-work-schedule-service.feature.platform.aws.chgit.com"
-        client_id = "0oaj3gnpvn9JzAup20h7"
-        client_secret = "0Qg4TeNUD12e7z08bbUVvfINWENLXdJrn2bUlHwf"
-    return (target, client_id, client_secret)

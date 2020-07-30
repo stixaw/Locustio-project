@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+  master:
+    image: locustio/locust:1.1.1
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./:/mnt/locust
+    environment:
+      - TEST_CLIENT_ID=${TEST_CLIENT_ID}
+      - TEST_CLIENT_SECRET=${TEST_CLIENT_SECRET}
+      - TEST_API_URL=${TEST_API_URL}
+    command: -f /mnt/locust/workschedule/User_Scenario.py --master --headless -u 28 -r 14 -t3m --expect-worker 1 --csv=load_test_results
+
+  worker:
+    image: locustio/locust:1.1.1
+    volumes:
+      - ./:/mnt/locust
+    environment:
+      - TEST_CLIENT_ID=${TEST_CLIENT_ID}
+      - TEST_CLIENT_SECRET=${TEST_CLIENT_SECRET}
+      - TEST_API_URL=${TEST_API_URL}
+    command: -f /mnt/locust/workschedule/User_Scenario.py --worker --master-host master

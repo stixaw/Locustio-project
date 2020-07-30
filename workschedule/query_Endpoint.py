@@ -16,8 +16,8 @@ def get_host():
     host = environ.get("TEST_API_URL")
     return host
 
+class QueryEndpoint(TaskSet):
 
-class CreateShiftSequence(SequentialTaskSet):
 
     def on_start(self):
         self.get_token()
@@ -50,58 +50,7 @@ class CreateShiftSequence(SequentialTaskSet):
       return self.assignment_id
 
     @task
-    def create_worksite(self):
-        default_worksites = env.get_default_worksites()
-        url = "/assignments/%s/worksites/batchUpdateLabels" % self.assignment_id
-
-        print("Create 3 Worksites")
-        response = self.client.post(url, headers={
-            "Authorization": self.jwt,
-            "Content-Type": "application/json"
-        }, json=default_worksites
-        )
-        body = json.loads(response.text)
-        if len(body['assignmentWorksites']) > 0:
-            self.worksite_id = body['assignmentWorksites'][0]['worksiteId']
-        assert response.elapsed < datetime.timedelta(seconds = 3), "createWorksite request took more than 3 second"
-        return self.worksite_id  
-
-
-    @task
-    def create_shift(self):
-
-        start_date = "2020-07-30"
-        url = "/assignments/%s/shifts" % self.assignment_id
-
-        print("Create A Shift")
-        response = self.client.post(url, headers={
-            "Authorization": self.jwt,
-            "Content-Type": "application/json"
-        }, json={
-
-            "startDate": start_date,
-            "status": "Confirmed",
-            "worksites": [{
-                "worksiteId": self.worksite_id
-            }]
-
-        })
-        assert response.elapsed < datetime.timedelta(seconds = 3), "Create Shift request took more than 3 second"
-
-    @task
-    def get_shifts(self):
-
-        url = "/assignments/%s/shifts" % self.assignment_id
-
-        print("Get Shift")
-        response = self.client.get(url, headers={
-            "Authorization": self.jwt,
-            "Content-Type": "application/json"
-        })
-        assert response.elapsed < datetime.timedelta(seconds = 3), "Get Shifts request took more than 3 second"
-
-    @task
-    def query_endpoint(self):
+    def shifts_by_assignment_id(self):
         url = "/shifts/query?count=100&page=1&includeDeleted=true"
 
         print("Query select all shifts by assignmentId")
@@ -117,9 +66,22 @@ class CreateShiftSequence(SequentialTaskSet):
         print("query results {0}".format(body))
         assert response.elapsed < datetime.timedelta(seconds = 3), "Query get shifts by assignmentId request took more than 3 second"
 
+    @task
+    def shifts_by_assignment_id_since(self):
+      url = "/shifts/query?count=100&page=1"
 
-class WebsiteUser(HttpUser):
-    host = get_host()
-
-    tasks = [CreateShiftSequence]
-    wait_time = between(1, 2)
+      print("Query select shifts by assignment id since date")
+      response = self.client.post(url, headers={
+            "Authorization": self.jwt,
+            "Content-Type": "application/json"
+        }, json={
+            "where": {
+              "startDate": {
+                "$gte": "2020-03-13T06:00:00.000Z"
+              },
+              "assignmentId": self.assignment_id
+            }
+        })
+      body = json.loads(response.text)
+      print("query results {0}".format(body))
+      assert response.elapsed < datetime.timedelta(seconds = 3), "Query get shifts by assignmentId request took more than 3 second"
