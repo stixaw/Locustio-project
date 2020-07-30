@@ -1,7 +1,10 @@
 from os import environ
-from locust import HttpUser, TaskSet, task, between, SequentialTaskSet, User
-import uuid
-import env
+import locust
+from locust.env import Environment
+from locust.user import HttpUser, User, task
+from locust import between, SequentialTaskSet 
+import exit_handler
+import testdata
 import json
 import datetime
 
@@ -37,21 +40,19 @@ class UpdateShift(SequentialTaskSet):
             body = response.json()
             token = body['access_token']
             self.jwt = f'Bearer {token}'
-            print(self.jwt)
             return self.jwt
         else:
-            print(f'Status Code: {response.status_code}')
             self.interrupt()
 
     @task
     # put this onto the user instance for the taskset. (talk to Mark)
     def get_assignmentId(self):
-      self.assignment_id = env.get_assignment_id()
+      self.assignment_id = testdata.get_assignment_id()
       return self.assignment_id
     
     @task
     def create_worksite(self):
-        default_worksites = env.get_default_worksites()
+        default_worksites = testdata.get_default_worksites()
         url = "/assignments/%s/worksites/batchUpdateLabels" % self.assignment_id
 
         print("Create 3 Worksites")
@@ -64,7 +65,6 @@ class UpdateShift(SequentialTaskSet):
         if len(body['assignmentWorksites']) > 0:
             self.worksite_id = body['assignmentWorksites'][0]['worksiteId']
 
-        print("create worksiteid {0}".format(self.worksite_id))
         assert response.elapsed < datetime.timedelta(seconds = 3), "createWorksite request took more than 3 second"
         return self.worksite_id  
 
@@ -138,8 +138,6 @@ class UpdateShift(SequentialTaskSet):
                   "assignmentId": self.assignment_id
               }
           })
-        body = json.loads(response.text)
-        print("query results {0}".format(body))
         assert response.elapsed < datetime.timedelta(seconds = 3), "Query get shifts by assignmentId request took more than 3 second"
 
 

@@ -8,13 +8,17 @@ services:
     volumes:
       - ./:/mnt/locust
     environment:
-      - DOCKER_ENV=dev
-    command: -f /mnt/locust/workschedule/Bulk_CreateShift.py --master #--headless -u 5 -r 1 -t 1m --expect-worker 1
+      - TEST_CLIENT_ID=${TEST_CLIENT_ID}
+      - TEST_CLIENT_SECRET=${TEST_CLIENT_SECRET}
+      - TEST_API_URL=${TEST_API_URL}
+    command: -f /mnt/locust/workschedule/User_Scenario.py --master --headless -u 28 -r 14 -t3m --only-summary --reset-stats -- --expect-worker 1 
 
   worker:
     image: locustio/locust:1.1.1
     volumes:
       - ./:/mnt/locust
     environment:
-      - DOCKER_ENV=dev
-    command: -f /mnt/locust/workschedule/Bulk_CreateShift.py --worker --master-host master
+      - TEST_CLIENT_ID=${TEST_CLIENT_ID}
+      - TEST_CLIENT_SECRET=${TEST_CLIENT_SECRET}
+      - TEST_API_URL=${TEST_API_URL}
+    command: -f /mnt/locust/workschedule/User_Scenario.py --worker --master-host master --reset-stats

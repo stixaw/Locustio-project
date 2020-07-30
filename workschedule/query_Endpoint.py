@@ -1,7 +1,10 @@
 from os import environ
-from locust import HttpUser, TaskSet, task, between, SequentialTaskSet, User
-import uuid
-import env
+import locust
+from locust.env import Environment
+from locust.user import HttpUser, User, TaskSet, task
+from locust import between, SequentialTaskSet 
+import exit_handler
+import testdata
 import json
 import datetime
 
@@ -46,7 +49,7 @@ class QueryEndpoint(TaskSet):
     @task
     # put this onto the user instance for the taskset. (talk to Mark)
     def get_assignmentId(self):
-      self.assignment_id = env.get_assignment_id()
+      self.assignment_id = testdata.get_assignment_id()
       return self.assignment_id
 
     @task

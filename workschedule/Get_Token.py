@@ -1,6 +1,4 @@
 from locust import HttpUser, TaskSet, task, between, SequentialTaskSet, User
-import uuid
-import env
 import json
 from os import environ
 

@@ -1,7 +1,6 @@
 import uuid
 import random
 
-
 def get_assignment_id():
     a_uuid = uuid.uuid4()
     assignment_id = "test-{0}".format(a_uuid)
